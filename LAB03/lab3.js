@@ -1,61 +1,63 @@
 const connect = require('connect');
-const url = require('url');
-const connect = require('connect');
+const http = require('http');
 const url = require('url');
 
 const app = connect();
 
-function calculate(req, res) {
-    const parsedUrl = url.parse(req.url, true);
+function calculate(req, res, next) {
+    const parsedUrl = url.parse(req.url, true); // true => parse query string
+    const pathname = parsedUrl.pathname;
     const query = parsedUrl.query;
 
-    if (parsedUrl.pathname === '/lab2') {
+    if (pathname === '/lab2') {
         const method = query.method;
         const x = parseFloat(query.x);
         const y = parseFloat(query.y);
+
         let result;
-        let symbol;
+        let operator;
 
         if (isNaN(x) || isNaN(y)) {
-            res.end('Invalid number input.');
+            res.end('❌ Error: x and y must be numbers.');
             return;
         }
 
         switch (method) {
             case 'add':
                 result = x + y;
-                symbol = '+';
+                operator = '+';
                 break;
             case 'subtract':
                 result = x - y;
-                symbol = '-';
+                operator = '-';
                 break;
             case 'multiply':
                 result = x * y;
-                symbol = '*';
+                operator = '*';
                 break;
             case 'divide':
                 if (y === 0) {
-                    res.end('Cannot divide by zero.');
+                    res.end('❌ Error: Division by zero.');
                     return;
                 }
                 result = x / y;
-                symbol = '/';
+                operator = '/';
                 break;
             default:
-                res.end('Invalid method. Use add, subtract, multiply, or divide.');
+                res.end('❌ Error: Invalid method. Use add, subtract, multiply, or divide.');
                 return;
         }
 
-        res.end(`${x} ${symbol} ${y} = ${result}`);
+        res.setHeader('Content-Type', 'text/plain');
+        res.end(`${x} ${operator} ${y} = ${result}`);
     } else {
-        res.end('Invalid route. Use /lab2.');
+        res.setHeader('Content-Type', 'text/plain');
+        res.end('📍 Please use the /lab2 endpoint with method, x, and y query parameters.');
     }
 }
 
 app.use(calculate);
 
-app.listen(3000, () => {
-    console.log('Server running at http://localhost:3000/');
-
+http.createServer(app).listen(3000, () => {
+    console.log('✅ Server running at http://localhost:3000/');
 });
